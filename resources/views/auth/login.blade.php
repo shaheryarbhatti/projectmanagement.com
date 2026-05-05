@@ -171,12 +171,12 @@
                 <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="1" id="remember" name="remember">
                     <label class="form-check-label text-muted small" for="remember">Remember me</label>
                 </div>
-            </div>
+            </div> -->
 
             <button type="submit" class="btn btn-primary w-100">Sign In to Dashboard</button>
         </form>
