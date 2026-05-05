@@ -148,27 +148,31 @@ class ChatAssistantService
             foreach ($cols as $col) {
                 if (in_array(strtolower($col), $excludeCols)) continue;
                 
-                // Optimized unique value scanning (Only short/categorical values)
                 $uniques = \Illuminate\Support\Facades\DB::table($targetTable)->whereNotNull($col)->where($col, '!=', '')->distinct()->pluck($col);
+                $matchingVals = [];
+                
                 foreach ($uniques as $val) {
                     $valStr = strtolower((string)$val);
-                    if (strlen($valStr) > 100) continue; // Skip long narrative content as filter keys
+                    if (strlen($valStr) > 100) continue;
 
                     $vWords = array_filter(explode(' ', preg_replace('/[^a-z0-9 ]/i', ' ', $valStr)), fn($w) => strlen($w) > 3);
                     
-                    // Score the match based on word overlap
                     $matchCount = 0;
                     foreach ($vWords as $vw) { 
                         if (in_array($vw, $qWords)) $matchCount++; 
                     }
                     
                     if ($matchCount >= 2 || (count($vWords) === 1 && in_array($valStr, $qWords))) {
-                        $query->where($col, $val);
-                        $displayVal = strlen($val) > 50 ? substr($val, 0, 47) . '...' : $val;
-                        $filtersApplied[] = ucwords(str_replace('_', ' ', $col)) . ": **$displayVal**";
-                        $confidence += ($matchCount * 10);
-                        break;
+                        $matchingVals[] = $val;
+                        $confidence += ($matchCount * 5);
                     }
+                }
+
+                if (!empty($matchingVals)) {
+                    $query->whereIn($col, $matchingVals);
+                    $displayVal = count($matchingVals) > 1 ? count($matchingVals) . " matches" : $matchingVals[0];
+                    if (strlen((string)$displayVal) > 50) $displayVal = substr((string)$displayVal, 0, 47) . '...';
+                    $filtersApplied[] = ucwords(str_replace('_', ' ', $col)) . ": **$displayVal**";
                 }
             }
 
